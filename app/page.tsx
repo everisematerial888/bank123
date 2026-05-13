@@ -220,7 +220,7 @@ export default function JointAccountTracker() {
     const fetchCloudData = async () => {
       try {
         // ✨ 已修改：換成全新檔名 "joint_account_v2" 強制載入 171 筆資料
-        const docRef = doc(db, "accounting", "joint_account_v2");
+        const docRef = doc(db, "accounting", "joint_account_v3");
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists() && docSnap.data().list) {
@@ -247,7 +247,7 @@ export default function JointAccountTracker() {
     setTransactions(updatedList);
     try {
       // ✨ 已修改：同步存入 "joint_account_v2"
-      await setDoc(doc(db, "accounting", "joint_account_v2"), { list: updatedList });
+      await setDoc(doc(db, "accounting", "joint_account_v3"), { list: updatedList });
     } catch (error) {
       console.error("Firebase 同步失敗:", error);
       alert("儲存失敗！請確認 Firestore 資料庫規則是否已設定為 allow read, write: if true;");
