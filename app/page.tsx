@@ -4,22 +4,22 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
 // ==========================================
-// 🔥 Firebase 設定（已幫妳填入金鑰與基本架構）
+// 🔥 Firebase 真實設定 (raycybank)
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyB5-9UwCJdShs-xh7GqDO9cZnWw_sqon0o",
-  authDomain: "bank123-joint.firebaseapp.com",
-  projectId: "bank123-joint",
-  storageBucket: "bank123-joint.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:1234567890"
+  apiKey: "AIzaSyCMXEBGukt4d-VBCNbaDQuNhqW8tlDA6m0",
+  authDomain: "raycybank.firebaseapp.com",
+  projectId: "raycybank",
+  storageBucket: "raycybank.firebasestorage.app",
+  messagingSenderId: "726164397714",
+  appId: "1:726164397714:web:811d072541c3535b1d904b"
 };
 
 // 初始化 Firebase 與 Firestore 資料庫
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 2026/01 - 2026/05 富邦銀行初始明細 (作為資料庫沒資料時的預設基底)
+// 初始明細 (只會在你們的資料庫完全空白時載入一次作為基底)
 const initialData = [
   { id: 1, date: "2026-05-13", type: "刷卡消費", expense: 3695, income: 0, description: "微風南山", category: "Credit Card", note: "" },
   { id: 2, date: "2026-05-13", type: "刷卡消費", expense: 3181, income: 0, description: "BELLAV", category: "Credit Card", note: "" },
@@ -38,14 +38,14 @@ const initialData = [
 ];
 
 export default function JointAccountTracker() {
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState<{id: number, date: string, type: string, expense: number, income: number, description: string, category: string, note: string}[]>([]);
   const [selectedMonth, setSelectedMonth] = useState("2026-05");
   const [activeCategoryFilter, setActiveCategoryFilter] = useState("All"); 
   const [loading, setLoading] = useState(true);
   
   const [newRow, setNewRow] = useState({ date: '', type: '刷卡消費', expense: 0, income: 0, description: '', category: 'Credit Card', note: '' });
 
-  // 1. 從 Firebase 雲端讀取最新的記帳資料
+  // 1. 從 Firebase 讀取資料
   useEffect(() => {
     const fetchCloudData = async () => {
       try {
@@ -55,12 +55,12 @@ export default function JointAccountTracker() {
         if (docSnap.exists() && docSnap.data().list) {
           setTransactions(docSnap.data().list);
         } else {
-          // 如果 Firebase 裡面還沒建檔，就拿 1-5 月的初始資料當作基底
+          // 如果是第一次使用，建立預設資料
           setTransactions(initialData);
           await setDoc(docRef, { list: initialData });
         }
       } catch (error) {
-        console.error("Firebase 讀取失敗，改用本地暫存:", error);
+        console.error("Firebase 讀取失敗，請確認是否開啟了 Firestore 且設為測試模式:", error);
         const local = localStorage.getItem('jointAccountData');
         setTransactions(local ? JSON.parse(local) : initialData);
       } finally {
@@ -71,14 +71,14 @@ export default function JointAccountTracker() {
     fetchCloudData();
   }, []);
 
-  // 2. 雲端自動儲存機制：只要任何項目有更動（新增、刪除、寫備註），就即時送回 Firebase
-  const saveToCloud = async (updatedList) => {
+  // 2. 儲存到 Firebase 雲端
+  const saveToCloud = async (updatedList: any) => {
     setTransactions(updatedList);
     localStorage.setItem('jointAccountData', JSON.stringify(updatedList));
     try {
       await setDoc(doc(db, "accounting", "joint_account"), { list: updatedList });
     } catch (error) {
-      console.error("Firebase 雲端同步失敗:", error);
+      console.error("Firebase 同步失敗:", error);
     }
   };
 
@@ -138,7 +138,7 @@ export default function JointAccountTracker() {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-neutral-50 flex items-center justify-center text-neutral-500 font-medium tracking-widest text-sm uppercase">📡 正在從 Firebase 雲端同步中...</div>;
+    return <div className="min-h-screen bg-neutral-50 flex items-center justify-center text-neutral-500 font-medium tracking-widest text-sm uppercase">📡 正在從 raycybank 雲端同步資料...</div>;
   }
 
   return (
@@ -148,7 +148,7 @@ export default function JointAccountTracker() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-neutral-900">💍 Cindy & Ray 共同帳戶</h1>
-            <p className="text-sm text-emerald-600 font-medium mt-1">● Firebase 雲端即時記憶模式已啟動</p>
+            <p className="text-sm text-emerald-600 font-medium mt-1">● raycybank 雲端即時記憶模式已啟動</p>
           </div>
           <select 
             value={selectedMonth} 
@@ -204,7 +204,7 @@ export default function JointAccountTracker() {
                     <th className="p-4">日期</th>
                     <th className="p-4">描述項目</th>
                     <th className="p-4 text-right">金額</th>
-                    <th className="p-4">備註編輯 (雲端自動儲存)</th>
+                    <th className="p-4">備註編輯 (雲端即時儲存)</th>
                     <th className="p-4 text-center">操作</th>
                   </tr>
                 </thead>
@@ -258,7 +258,7 @@ export default function JointAccountTracker() {
               <form onSubmit={handleAddTransaction} className="space-y-3 text-xs">
                 <div>
                   <label className="block text-neutral-400 mb-1">交易日期</label>
-                  <input type="date" value={newRow.date} onChange={e => setNewRow({...newRow, date: e.target.value})} className="w-full p-2 border border-neutral-200 rounded-lg outline-none" />
+                  <input type="date" value={newRow.date} onChange={e => setNewRow({...newRow, date: e.target.value})} className="w-full p-2 border border-neutral-200 rounded-lg outline-none focus:border-neutral-400" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -275,8 +275,8 @@ export default function JointAccountTracker() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-neutral-400 mb-1">項目描述</label>
-                  <input type="text" placeholder="商家或活動" value={newRow.description} onChange={e => setNewRow({...newRow, description: e.target.value})} className="w-full p-2 border border-neutral-200 rounded-lg outline-none" />
+                  <label className="block text-neutral-400 mb-1">項目描述 (商家或活動)</label>
+                  <input type="text" placeholder="例如：微風南山、轉入" value={newRow.description} onChange={e => setNewRow({...newRow, description: e.target.value})} className="w-full p-2 border border-neutral-200 rounded-lg outline-none" />
                 </div>
                 <div>
                   <label className="block text-neutral-400 mb-1">金額</label>
