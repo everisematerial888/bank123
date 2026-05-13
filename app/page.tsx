@@ -188,18 +188,15 @@ const initialData = [
 export default function JointAccountTracker() {
   const [transactions, setTransactions] = useState(initialData);
   const [selectedMonth, setSelectedMonth] = useState("2026-05");
-  const [activeCategoryFilter, setActiveCategoryFilter] = useState("All"); // All, Credit Card, Income, Transfer/Withdrawal
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState("All"); 
   
-  // 新增手動紀錄的表單狀態
   const [newRow, setNewRow] = useState({ date: '', type: '刷卡消費', expense: 0, income: 0, description: '', category: 'Credit Card', note: '' });
 
-  // 取得月份清單
   const months = useMemo(() => {
     const allMonths = transactions.map(t => t.date.substring(0, 7));
     return Array.from(new Set(allMonths)).sort((a, b) => b.localeCompare(a));
   }, [transactions]);
 
-  // 當月且符合分類篩選的交易
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
       const matchMonth = t.date.startsWith(selectedMonth);
@@ -208,7 +205,6 @@ export default function JointAccountTracker() {
     });
   }, [transactions, selectedMonth, activeCategoryFilter]);
 
-  // 計算當月三大核心指標
   const monthlySummary = useMemo(() => {
     const currentMonthData = transactions.filter(t => t.date.startsWith(selectedMonth));
     return currentMonthData.reduce((acc, curr) => {
@@ -219,17 +215,14 @@ export default function JointAccountTracker() {
     }, { creditCard: 0, income: 0, transfer: 0 });
   }, [transactions, selectedMonth]);
 
-  // 修改備註
   const handleNoteChange = (id: number, newNote: string) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, note: newNote } : t));
   };
 
-  // 刪除紀錄
   const handleDelete = (id: number) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
-  // 手動新增
   const handleAddTransaction = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRow.date || !newRow.description) return alert("請填寫日期與描述！");
@@ -253,7 +246,6 @@ export default function JointAccountTracker() {
     <div className="min-h-screen bg-neutral-50 text-neutral-800 p-6 md:p-12">
       <div className="max-w-6xl mx-auto">
         
-        {/* Top Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-neutral-900">💍 Cindy & Ray 共同帳戶</h1>
@@ -268,7 +260,6 @@ export default function JointAccountTracker() {
           </select>
         </div>
 
-        {/* 核心功能點：三大主頁卡片切換 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <button 
             onClick={() => setActiveCategoryFilter(activeCategoryFilter === "Credit Card" ? "All" : "Credit Card")}
@@ -298,10 +289,8 @@ export default function JointAccountTracker() {
           </button>
         </div>
 
-        {/* 下方管理區塊 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* 左側：明細細項列表 */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-neutral-100 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-neutral-100 bg-neutral-50/50 flex justify-between items-center">
               <h2 className="font-semibold text-neutral-800">
@@ -319,7 +308,7 @@ export default function JointAccountTracker() {
                     <th className="p-4">日期</th>
                     <th className="p-4">描述項目</th>
                     <th className="p-4 text-right">金額</th>
-                    <th className="p-4">信箱 / 備註編輯 (可直接輸入)</th>
+                    <th className="p-4">備註編輯 (點擊輸入)</th>
                     <th className="p-4 text-center">操作</th>
                   </tr>
                 </thead>
@@ -359,7 +348,7 @@ export default function JointAccountTracker() {
                   ))}
                   {filteredTransactions.length === 0 && (
                     <tr>
-                      <td colSpan="5" className="p-12 text-center text-neutral-400">當月此分類無任何交易紀錄</td>
+                      <td colSpan={5} className="p-12 text-center text-neutral-400">當月此分類無任何交易紀錄</td>
                     </tr>
                   )}
                 </tbody>
@@ -367,10 +356,8 @@ export default function JointAccountTracker() {
             </div>
           </div>
 
-          {/* 右側：手動控制項 + PDF 匯入端 */}
           <div className="space-y-6">
             
-            {/* 手動手動新增區塊 */}
             <div className="bg-white p-6 rounded-xl border border-neutral-100 shadow-sm">
               <h3 className="font-semibold text-neutral-900 mb-4 text-sm">➕ 手動新增紀錄</h3>
               <form onSubmit={handleAddTransaction} className="space-y-3 text-xs">
@@ -398,7 +385,7 @@ export default function JointAccountTracker() {
                 </div>
                 <div>
                   <label className="block text-neutral-400 mb-1">金額</label>
-                  <input type="number" value={newRow.category === 'Income' ? newRow.income : newRow.expense} onChange={e => setNewRow(newRow.category === 'Income' ? {...newRow, income: e.target.value} : {...newRow, expense: e.target.value})} className="w-full p-2 border border-neutral-200 rounded-lg outline-none" />
+                  <input type="number" value={newRow.category === 'Income' ? newRow.income : newRow.expense} onChange={e => setNewRow(newRow.category === 'Income' ? {...newRow, income: Number(e.target.value)} : {...newRow, expense: Number(e.target.value)})} className="w-full p-2 border border-neutral-200 rounded-lg outline-none" />
                 </div>
                 <button type="submit" className="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-medium p-2.5 rounded-lg mt-2 transition-all">
                   確認新增一筆交易
@@ -406,7 +393,6 @@ export default function JointAccountTracker() {
               </form>
             </div>
 
-            {/* PDF 自動明細匯入地方 */}
             <div className="bg-white p-6 rounded-xl border border-neutral-100 shadow-sm border-dashed border-2 border-neutral-200">
               <h3 className="font-semibold text-neutral-900 mb-2 text-sm">📑 匯入每月 PDF 銀行明細</h3>
               <p className="text-xs text-neutral-400 mb-4">拖曳或上傳新的 PDF 檔案，系統將自動解析並整合成月度總覽。</p>
