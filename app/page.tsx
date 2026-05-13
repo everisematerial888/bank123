@@ -196,7 +196,7 @@ export default function JointAccountTracker() {
   // 取得月份清單
   const months = useMemo(() => {
     const allMonths = transactions.map(t => t.date.substring(0, 7));
-    return [...new Set(allMonths)].sort((a, b) => b.localeCompare(a));
+    return Array.from(new Set(allMonths)).sort((a, b) => b.localeCompare(a));
   }, [transactions]);
 
   // 當月且符合分類篩選的交易
