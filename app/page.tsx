@@ -220,17 +220,17 @@ export default function JointAccountTracker() {
   }, [transactions, selectedMonth]);
 
   // 修改備註
-  const handleNoteChange = (id, newNote) => {
+  const handleNoteChange = (id: number, newNote: string) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, note: newNote } : t));
   };
 
   // 刪除紀錄
-  const handleDelete = (id) => {
+  const handleDelete = (id: number) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
   // 手動新增
-  const handleAddTransaction = (e) => {
+  const handleAddTransaction = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRow.date || !newRow.description) return alert("請填寫日期與描述！");
     
